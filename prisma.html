@@ -1,0 +1,120 @@
+  <!DOCTYPE html>
+  <html lang="en-GB">
+
+  <head>
+    <meta charset="utf-8" />
+    <title>Daniela Porras Matiz</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #text {
+        position: absolute;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        color: #000000;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r94/three.min.js"></script>
+    <script type="module">
+      import { OrbitControls } from 'https://unpkg.com/three@0.126.1/examples/jsm/controls/OrbitControls';
+
+      // Escena, cámara y render
+      let scene = new THREE.Scene();
+      let camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 1000);
+      let renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0x000000, 1.0);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      let controls = new OrbitControls(camera, renderer.domElement);
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+      // Parámetros del plano
+      let origin = new THREE.Vector3(0, 0, 0);
+      let x = new THREE.Vector3(1, 0, 0);
+      let y = new THREE.Vector3(0, 1, 0);
+      let z = new THREE.Vector3(0, 0, 1);
+
+      // Grilla
+      var gridHelperXZ = new THREE.GridHelper(700, 20, 0x333333, 0x333333);
+
+      // Plano
+      var arrowX = new THREE.ArrowHelper(x, origin, 40, 0xAA0000);
+      var arrowY = new THREE.ArrowHelper(y, origin, 40, 0x00AA00);
+      var arrowZ = new THREE.ArrowHelper(z, origin, 40, 0x0000AA);
+
+      // Posición cámara
+      camera.position.x = 300;
+      camera.position.y = 300;
+      camera.position.z = 300;
+      camera.lookAt(scene.position);
+      document.body.appendChild(renderer.domElement);
+
+      // Agregar
+      scene.add(gridHelperXZ);
+      scene.add(arrowX);
+      scene.add(arrowY);
+      scene.add(arrowZ);
+
+      function poligono(nlados, dim) {
+        const vertices = [];
+        const ang = 2 * Math.PI / nlados;
+        const radio = dim / 2 / Math.sin(ang / 2);
+        for (let i = 0; i <= nlados; i++) {
+          const x = radio * Math.cos(i * ang);
+          const y = radio * Math.sin(i * ang);
+          vertices.push([x, y]);
+        }
+        return vertices;
+      }
+
+      function troncoPiramide(altura, nlados, apotemaInferior, porcentajeApotemaSuperior) {
+        const verticesInferior = poligono(nlados, apotemaInferior * 2);
+        const verticesSuperior = poligono(nlados, apotemaInferior * porcentajeApotemaSuperior * 2);
+
+        const shapeInferior = new THREE.Shape();
+        shapeInferior.moveTo(verticesInferior[0][0], verticesInferior[0][1]);
+        for (let i = 1; i < verticesInferior.length; i++) {
+          shapeInferior.lineTo(verticesInferior[i][0], verticesInferior[i][1]);
+        }
+
+        const shapeSuperior = new THREE.Shape();
+        shapeSuperior.moveTo(verticesSuperior[0][0], verticesSuperior[0][1]);
+        for (let i = 1; i < verticesSuperior.length; i++) {
+          shapeSuperior.lineTo(verticesSuperior[i][0], verticesSuperior[i][1]);
+        }
+
+        const geometry = new THREE.ExtrudeGeometry([shapeInferior, shapeSuperior], {
+          depth: altura,
+          bevelEnabled: false
+        });
+
+        return geometry;
+      }
+
+      const geometry = troncoPiramide(80, 6, 10, 0.5);
+      const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      // Animate
+      function render() {
+        requestAnimationFrame(render);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+
+      render();
+    </script>
+  </body>
+
+  </html>
